@@ -1,0 +1,136 @@
+﻿@using Productive.Shared.ViewModels;
+@using Productive.Shared.Core
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+<!-- Modal -->
+<div class="modal fade" id="@ModalId" tabindex="-1" role="dialog" aria-labelledby="media-modal-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Edit Client</h5>
+                @if (!_isLoading)
+                {
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                }
+            </div>
+
+
+            <div class="modal-body">
+                @if (_client.ClientCellPhone != null)
+                    {
+                <EditForm class="row g-3" Model="@_client" OnValidSubmit="@HandleAddClientSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="col-12">
+                        <label for="Name" class="form-label"> Name</label>
+                        <InputText class="form-control" placeholder="Client's Name" @bind-Value="_client.Name" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="Name" class="form-label"> Email</label>
+                        <InputText class="form-control" placeholder="Client's Email" @bind-Value="_client.Email" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="Name" class="form-label"> Email Status</label>
+                        <InputSelect @bind-Value="_client.EmailStatus" class="form-control">
+                            <option value="">Select a status</option>
+                            @foreach (var item in Enum.GetValues(typeof(Enums.EmailCellPhoneStatus)))
+                                {
+                                <option value="@item">@item.ToString()</option>
+                                }
+                        </InputSelect>
+                      
+                    </div>
+                    <div class="col-md-6">
+                        <label for="Name" class="form-label"> CellPhone</label>
+                        <InputText class="form-control" placeholder="Client's CellPhone" @bind-Value="_client.ClientCellPhone.CellPhone" />
+                    </div>
+                    <div class="col-md-6">
+                    <label for="Name" class="form-label"> CellPhone Status</label>
+                    <InputSelect @bind-Value="_client.ClientCellPhone.CellPhoneStatus" class="form-control">
+                        <option value="">Select a status</option>
+                        @foreach (var item in Enum.GetValues(typeof(Enums.EmailCellPhoneStatus)))
+                            {
+                            <option value="@item">@item.ToString()</option>
+                            }
+                    </InputSelect>
+   
+</div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </EditForm>
+
+                    }</div>
+            <div class="modal-footer">
+                @if (_isLoading)
+                {
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">...</span>
+                    </div>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    ClientViewModel _client = new ClientViewModel();
+    public bool _isLoading { get; set; } = false;
+    public string ModalId { get; set; } = "editClientModal";
+    [Parameter]
+    public EventCallback<bool> OnClientEdited { get; set; }
+
+
+    public async Task ShowClientEditModalAsync(ClientViewModel client)
+    {
+        _client = client;
+        _isLoading = false;
+        StateHasChanged();
+
+        await JsRuntime.InvokeVoidAsync("app.showModal", ModalId);
+    }
+    private async Task HandleAddClientSubmit()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+
+            var response = await Http.PutAsJsonAsync($"api/Clients/{_client.Id}", _client);
+            var responseText = await response.Content.ReadAsStringAsync();
+            dynamic jsonObject = JsonConvert.DeserializeObject<dynamic>(responseText);
+            if (response.IsSuccessStatusCode)
+            {
+                await JsRuntime.InvokeVoidAsync("app.toastSuccess", $"Client saved Successfully!");
+                await OnClientEdited.InvokeAsync(true);
+                _isLoading = false;
+                StateHasChanged();
+
+                await JsRuntime.InvokeVoidAsync("app.hideModal", ModalId);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("app.toastFailure", $"{jsonObject["error"]}");
+                _isLoading = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception exception)
+        {
+            await JsRuntime.InvokeVoidAsync("app.toastFailure", $"An error occured try again!");
+            _isLoading = false;
+            StateHasChanged();
+
+            // exception.Redirect();
+        }
+    }
+}
+

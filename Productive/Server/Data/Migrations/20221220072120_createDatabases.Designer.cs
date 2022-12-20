@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Productive.Server.Data;
 
@@ -10,9 +11,10 @@ using Productive.Server.Data;
 namespace Productive.Server.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221220072120_createDatabases")]
+    partial class createDatabases
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.12");
@@ -372,7 +374,7 @@ namespace Productive.Server.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DeletedOn")
@@ -421,9 +423,6 @@ namespace Productive.Server.Data.Migrations
                         .HasMaxLength(12)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CellPhoneStatus")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -433,11 +432,14 @@ namespace Productive.Server.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("DeletedBy")
-                        .HasMaxLength(256)
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DeletedOn")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("EmailSmsStatus")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
@@ -451,9 +453,6 @@ namespace Productive.Server.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CellPhone")
-                        .IsUnique();
 
                     b.ToTable("ClientCellPhones");
                 });

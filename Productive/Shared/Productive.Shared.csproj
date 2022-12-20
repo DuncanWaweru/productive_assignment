@@ -9,4 +9,12 @@
   <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="ViewModels\" />
+    <None Remove="Core\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
+    <Folder Include="Core\" />
+  </ItemGroup>
 </Project>

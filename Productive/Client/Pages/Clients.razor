@@ -1,0 +1,139 @@
+﻿@page "/clients"
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavManager
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Productive.Shared
+@attribute [Authorize]
+@using Productive.Shared.ViewModels;
+@using Productive.Client.Shared.Modals.Create
+@using Productive.Client.Shared.Modals.Edit
+    @using Productive.Client.Shared.Modals.Delete
+
+@if (_isLoading)
+{
+    <div class="mx-auto">
+        <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="panel panel-default">
+        <div class="col">
+            <div class="float-start">View Clients</div>
+            <div class="float-end"><span role="button" @onclick="ShowCreateClientModal" class="btn btn-primary btn-sm">Add Client</span></div>
+        </div>
+    </div>
+
+    @if (_clients == null)
+    {
+        <div class="panel panel-default panel-warning">
+            <div class="panel-body"> Loading...</div>
+        </div>
+    }
+    else if (_clients.Count() == 0)
+    {
+        <div class="panel panel-default">
+            <div class="panel-body">There are no clients to show.</div>
+        </div>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <td>Name</td>
+                    <td>Email</td>
+                    <td>EmailStatus</td>
+                    <td>CellPhone</td>
+                    <td>CellPhoneStatus</td>
+                    <td>Actions</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _clients)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Email</td>
+                        <td>@item.EmailStatus.ToString()</td>
+                        <td>@item.ClientCellPhone.CellPhone</td>
+                        <td>@item.ClientCellPhone.CellPhoneStatus.ToString()</td>
+                        <td>
+                            <span @onclick="async ()=> { await ShowEditClientModal(item); }" role="button" title="Edit" class="btn btn-xs btn-primary m-2"><i class="oi oi-pencil"></i></span>
+                            <span @onclick="async ()=> { await ShowDeleteClientModal(item); }" role="button" title="Delete" class="btn btn-xs btn-danger m-2"><i class="oi oi-delete"></i></span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    }
+}
+<CreateClientModal @ref="_createClientModal" OnClientAdded="OnClientAdded" />
+<DeleteClientModal @ref="_deleteClientModal" OnClientDeleted="OnClientDeleted" />
+<EditClientModal @ref="_editClientModal" OnClientEdited="OnClientEdited" />
+@code
+    {
+    CreateClientModal _createClientModal;
+    DeleteClientModal _deleteClientModal;
+    EditClientModal _editClientModal;
+    public bool _isLoading { get; set; } = false;
+    List<ClientViewModel> _clients { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClients();
+    }
+    private async Task LoadClients()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            _clients = await Http.GetFromJsonAsync<List<ClientViewModel>>($"api/clients");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+        _isLoading = false;
+        StateHasChanged();
+    }
+    public async Task ShowCreateClientModal()
+    {
+        await _createClientModal.ShowClientRegisterModalAsync();
+    }
+    public async Task ShowDeleteClientModal(ClientViewModel client)
+    {
+        await _deleteClientModal.ShowClientDeleteModalAsync(client);
+    }
+     public async Task ShowEditClientModal(ClientViewModel client)
+    {
+        await _editClientModal.ShowClientEditModalAsync(client);
+    }
+    public async Task OnClientAdded(bool status)
+    {
+        if (status)
+        {
+            await LoadClients();
+        }
+    }
+    public async Task OnClientDeleted(bool status)
+    {
+        if (status)
+        {
+            await LoadClients();
+        }
+    }
+    public async Task OnClientEdited(bool status)
+    {
+        if (status)
+        {
+            await LoadClients();
+        }
+    }
+}
+
